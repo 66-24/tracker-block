@@ -1,0 +1,27 @@
+{
+  "name": "tracker-block",
+  "type": "module",
+  "version": "1.0.0",
+  "main": "tracker-block-extension.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/66-24/tracker-block.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/66-24/tracker-block/issues"
+  },
+  "homepage": "https://github.com/66-24/tracker-block#readme",
+  "description": "",
+  "devDependencies": {
+    "puppeteer": "^24.10.1"
+  }
+}

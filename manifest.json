@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "Tracker Bypass",
+  "version": "1.0",
+  "description": "Highlights tracking URLs and bypasses them when clicked",
+
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["tracker-block-extension.js"],
+      "run_at": "document_idle" 
+    }
+  ],
+
+  "permissions": [
+    "tabs",
+    "scripting"
+  ],
+
+  "host_permissions": ["<all_urls>"],
+
+  "web_accessible_resources": [
+    {
+      "resources": ["tracking_urls.txt"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+
+  "action": {
+    "default_title": "Tracker Bypass"
+  }
+}

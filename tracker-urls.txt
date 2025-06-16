@@ -1,0 +1,34 @@
+https://www.google-analytics.com/collect
+
+# Facebook Pixel
+https://www.facebook.com/tr/
+
+https://mailchimp.com/track/
+
+https://sendinblue.com/trk/
+
+https://track.hubspot.com/
+
+https://mktoweb.com/
+
+https://pi.pardot.com/
+
+https://clickmagick.com/t/
+
+https://bit.ly/
+
+https://rebrand.ly/
+
+# Twitter tracking
+https://t.co/
+
+# LinkedIn tracking
+https://lnkd.in/
+
+# Hootsuite URL shortener
+https://ow.ly/
+
+# Buffer URL shortener
+https://buff.ly/
+
+https://pmwebq.clicks.mlsend.com
