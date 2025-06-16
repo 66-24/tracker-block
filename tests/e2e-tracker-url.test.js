@@ -3,59 +3,62 @@ import path from "path";
 import { fileURLToPath } from "url";
 import assert from "assert";
 
-const EXT_PATH = path.resolve(".");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const EXT_PATH = path.resolve(__dirname, "../extension");
 
 const TRACKER_URL =
-  // "https://pmwebq.clicks.mlsend.com/tj/c/eyJ2Ijoie1wiYVwiOjEyMzU0MDAsXCJsXCI6MTU3MjAyNDk2OTQ4Nzk4ODQ5LFwiclwiOjE1NzIwMjUwOTYwNjE1OTkwN30iLCJzIjoiOTg1OTEzNzhlZDc1NTczZCJ9";
-  "https://google.com";
+  "https://pmwebq.clicks.mlsend.com/tj/c/eyJ2Ijoie1wiYVwiOjEyMzU0MDAsXCJsXCI6MTU3MjAyNDk2OTQ4Nzk4ODQ5LFwiclwiOjE1NzIwMjUwOTYwNjE1OTkwN30iLCJzIjoiOTg1OTEzNzhlZDc1NTczZCJ9";
+
 const EXPECTED_URL =
   "https://www.infoq.com/articles/microservices-traffic-mirroring-istio-vpc/";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 (async () => {
+  console.log("[DEBUG] EXT_PATH:", EXT_PATH);
+
   const browser = await puppeteer.launch({
-    // Set to false to visually debug
-    headless: false,
+    headless: true,
     args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
       `--disable-extensions-except=${EXT_PATH}`,
       `--load-extension=${EXT_PATH}`,
     ],
   });
 
-  const targets = await browser.targets();
-  // The code checks all browser targets (pages, workers, etc.) and 
-  // finds the one that matches either type, so it works for both V2 and V3 extensions.
+  await new Promise(res => setTimeout(res, 1000)); // wait for service worker to register
+
+  const targets = browser.targets();
+  console.log("[DEBUG] Targets found:");
+  targets.forEach(t => console.log(`→ ${t.type()} | ${t.url()}`));
+
   const extensionTarget = targets.find(
-    t => t.type() === 'background_page' || t.type() === 'service_worker'
+    t => t.type() === "background_page" || t.type() === "service_worker"
   );
-  console.log("[DEBUG] Extension loaded:", !!extensionTarget);
 
+  if (!extensionTarget) {
+    console.error("❌ Extension failed to load.");
+    await browser.close();
+    process.exit(1);
+  }
 
-  const page = await browser.newPage();
-  await page.goto("about:blank");
+  console.log("✅ Extension loaded successfully.");
 
-  // Open the test URL
   const testPage = await browser.newPage();
-  // If this is missing, console.log from the content script won't show up
-  testPage.on("console", (msg) => {
-    console.log("[BROWSER]", msg.text());
-  });
+  testPage.on("console", msg => console.log("[BROWSER]", msg.text()));
+
+  console.log(`[INFO] Navigating to: ${TRACKER_URL}`);
   await testPage.goto(TRACKER_URL, { waitUntil: "domcontentloaded" });
 
-  // Wait a moment to let content.js act (click simulation, etc.)
-  await new Promise(resolve => setTimeout(resolve, 3000));
-
-  // Check if a new tab was opened with the expected final URL
-  const pages = await browser.pages();
-  const urls = pages.map(p => p.url());
-
-  assert(
-    urls.includes(EXPECTED_URL),
-    `Expected URL not found. Found: ${urls.join("\n")}`
+  console.log(`[INFO] Waiting for new tab with: ${EXPECTED_URL}`);
+  const target = await browser.waitForTarget(
+    t => t.url() === EXPECTED_URL,
+    { timeout: 5000 }
   );
 
-  console.log("Test passed: tracking URL redirected successfully.");
+  assert(target, `❌ Expected tab not found: ${EXPECTED_URL}`);
+  console.log("✅ Test passed: extension redirected as expected.");
+  console.log("[DEBUG] Tab opened:", target.url());
+
   await browser.close();
 })();

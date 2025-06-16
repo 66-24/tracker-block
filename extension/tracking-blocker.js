@@ -9,6 +9,10 @@ function removeUtmParams(url) {
   return params.length ? `${base}?${params.join("&")}` : base;
 }
 
+function isTrackingUrl(url, trackingUrls) {
+  return trackingUrls.some((prefix) => url.startsWith(prefix));
+}
+
 async function loadTrackingUrls() {
   const response = await fetch(chrome.runtime.getURL("./tracker-urls.txt"));
   const text = await response.text();
@@ -16,16 +20,13 @@ async function loadTrackingUrls() {
 }
 
 async function bypassTrackingUrl(url, trackingUrls) {
-  if (!(await isTrackingUrl(url, trackingUrls))) return null;
+  if (!isTrackingUrl(url, trackingUrls)) return null;
 
   const cleanUrl = removeUtmParams(url);
   try {
-    const response = await fetch(cleanUrl, {
-      method: "HEAD",
-      follow: 10,
-    });
+    const response = await fetch(cleanUrl, { method: "HEAD" });
     console.log("Bypassed URL:", response.url);
-    return response.url; 
+    return response.url;
   } catch (err) {
     console.error("Error bypassing tracking URL:", err);
     return null;

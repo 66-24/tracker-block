@@ -62,10 +62,6 @@
       # Initialize Dagger module
       dagger init --name=tracker-blocker-test --sdk=go
 
-      # Create the pipeline file
-      cat > dagger/main.go << 'EOF'
-        ${builtins.readFile ./dagger-pipeline.go}
-      EOF
 
       # Initialize Go module
       cd dagger
@@ -82,7 +78,7 @@
       echo "🧪 Running Chrome Extension Tests..."
 
       # Ensure dagger module exists
-      if [ ! -f "dagger/main.go" ]; then
+      if [ ! -f ".dagger/main.go" ]; then
         echo "❌ Dagger module not found. Run 'init-dagger' first."
         exit 1
       fi
@@ -253,20 +249,20 @@
   '';
 
   # Git hooks for quality assurance
-  git-hooks = {
-    hooks.test-extension = {
-      enable = true;
-      entry = "${pkgs.writeShellScript "test-extension" ''
-        if [ -f "dagger/main.go" ]; then
-          echo "Running extension tests before commit..."
-          dagger call -vvv test-extension --source=.
-        else
-          echo "Dagger not initialized, skipping tests"
-        fi
-      ''}";
-      files = "\\.(js|json|txt)$";
-    };
-  };
+  # git-hooks = {
+  #   hooks.test-extension = {
+  #     enable = true;
+  #     entry = "${pkgs.writeShellScript "test-extension" ''
+  #       if [ -f "dagger/main.go" ]; then
+  #         echo "Running extension tests before commit..."
+  #         dagger call -vvv test-extension --source=.
+  #       else
+  #         echo "Dagger not initialized, skipping tests"
+  #       fi
+  #     ''}";
+  #     files = "\\.(js|json|txt)$";
+  #   };
+  # };
 
   # https://devenv.sh/tasks/
   # tasks = {
