@@ -11,7 +11,7 @@
   # https://devenv.sh/packages/
   # SonarQube needs nodejs 18.17 or later
   packages = with pkgs; [
-    # Core development tools
+    # Core development tools\
     nodejs_20
     go
 
@@ -64,6 +64,28 @@
       dagger call test-extension --src=.
     '';
 
+
+    # Package the extension
+    package-extension.exec = ''
+      echo "🧪 Running Chrome Extension Tests..."
+
+      # Ensure dagger module exists
+      if [ ! -f ".dagger/main.go" ]; then
+        echo "❌ Dagger module not found. Run 'init-dagger' first."
+        exit 1
+      fi
+
+      # Run the tests
+      # `src` is of type  directory and is a parameter to the TextExtension Go function
+      dagger call package-extension -o tracker-blocker-extension.zip
+     if stat ./tracker-blocker-extension.zip >/dev/null 2>&1; then
+        echo "✅ Extension packaged successfully!"
+      else
+        echo "❌ Failed to package extension"
+        exit 1
+      fi
+    '';
+
   };
 
   enterShell = ''
@@ -86,6 +108,7 @@
     echo "Available commands:"
     echo "  🚀 init-dagger     - Initialize Dagger testing pipeline"
     echo "  🧪 test-extension  - Run Chrome extension tests"
+    echo "  📦 package-extension  - Test & Package Chrome extension"
     echo ""
     echo "Project structure:"
     echo "  📁 Extension files: manifest.json, *.js, tracker-urls.txt"
