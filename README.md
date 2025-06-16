@@ -236,6 +236,7 @@ Key features:
 
 Devenv Highlights:
 
+```nix
 packages = with pkgs; [ nodejs_20 go ];
 env = {
 CHROME_BIN = "${pkgs.google-chrome}/bin/google-chrome-stable";
@@ -243,5 +244,6 @@ PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true";
 };
 scripts.init-dagger.exec = "dagger init --sdk=go";
 scripts.test-extension.exec = "dagger call test-extension --src=.";
+```
 
 Just clone the repo and run `devenv shell` — no Dockerfiles, Makefiles, or setup docs needed.
