@@ -1,5 +1,5 @@
 {
-  "name": "tracker-blocker-test",
+  "name": "tracker-bypass-test",
   "engineVersion": "v0.18.10",
   "sdk": {
     "source": "go"
