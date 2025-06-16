@@ -218,15 +218,13 @@ This ensures that if a value isn’t provided, Dagger uses the specified default
 **In summary:**
 Use `*dagger.Directory` or `*dagger.File` for filesystem inputs, primitive types for configuration, and `context.Context` for lifecycle management. Set defaults with pragma comments for convenience and flexibility[^1][^2][^4].
 
-<div style="text-align: center">⁂</div>
-
 [^1]: <https://docs.dagger.io/api/arguments>
 [^2]: <https://docs.dagger.io/api/documentation>
 [^4]: <https://github.com/playgroundtech/dagger-go-example-app>
 
-## Powered by devenv
+## 🔋 Powered by devenv
 
-This project uses devenv (https://devenv.sh) to define a reproducible, declarative developer environment.
+This project uses devenv (<https://devenv.sh>) to define a reproducible, declarative developer environment.
 
 Key features:
 
