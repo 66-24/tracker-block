@@ -223,3 +223,27 @@ Use `*dagger.Directory` or `*dagger.File` for filesystem inputs, primitive types
 [^1]: <https://docs.dagger.io/api/arguments>
 [^2]: <https://docs.dagger.io/api/documentation>
 [^4]: <https://github.com/playgroundtech/dagger-go-example-app>
+
+## Powered by devenv
+
+This project uses devenv (https://devenv.sh) to define a reproducible, declarative developer environment.
+
+Key features:
+
+- Instant setup — auto-installs Node.js 20, Go, Puppeteer, and Chrome
+- Built-in testing — run Chrome Extension tests via Dagger: `test-extension`
+- One-time setup — run `init-dagger` to scaffold a Dagger testing pipeline in Go
+- Pre-commit hooks — run automated tests on staged JS/JSON/txt changes
+- Helpful shell welcome — shows project status and guidance on entry
+
+Devenv Highlights:
+
+packages = with pkgs; [ nodejs_20 go ];
+env = {
+CHROME_BIN = "${pkgs.google-chrome}/bin/google-chrome-stable";
+PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true";
+};
+scripts.init-dagger.exec = "dagger init --sdk=go";
+scripts.test-extension.exec = "dagger call test-extension --src=.";
+
+Just clone the repo and run `devenv shell` — no Dockerfiles, Makefiles, or setup docs needed.

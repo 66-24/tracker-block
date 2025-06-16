@@ -5,16 +5,6 @@
   # https://devenv.sh/basics/
   env = {
     GREET = "devenv";
-    # Ensure Chrome runs in headless mode for CI
-    CHROME_BIN = "${pkgs.google-chrome}/bin/google-chrome-stable";
-    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true";
-    PUPPETEER_EXECUTABLE_PATH =
-      "${pkgs.google-chrome}/bin/google-chrome-stable";
-
-    # Dagger configuration
-    DAGGER_ENGINE_VERSION = "v0.9.0";
-
-    # Project info
     PROJECT_NAME = "tracker-blocker-extension";
   };
 
@@ -24,17 +14,7 @@
     # Core development tools
     nodejs_20
     go
-    git
-    # Chrome extension development
-    google-chrome
-    chromium
 
-    # Utilities
-    zip
-    unzip
-    curl
-    wget
-    jq
   ];
 
   # https://devenv.sh/languages/
@@ -56,15 +36,11 @@
     init-dagger.exec = ''
       echo "🚀 Initializing Dagger module..."
 
-      # Create dagger directory if it doesn't exist
-      mkdir -p dagger
-
-      # Initialize Dagger module
       dagger init --name=tracker-blocker-test --sdk=go
 
 
       # Initialize Go module
-      cd dagger
+      cd .dagger
       go mod init tracker-blocker-test
       go mod tidy
       cd ..
@@ -84,105 +60,10 @@
       fi
 
       # Run the tests
-      dagger call test-extension --source=.
+      # `src` is of type  directory and is a parameter to the TextExtension Go function
+      dagger call test-extension --src=.
     '';
 
-    # Generate test report
-    generate-report.exec = ''
-      echo "📊 Generating test report..."
-
-      # Generate HTML report
-      dagger call generate-report --source=. > test-report.html
-
-      # Generate JSON results
-      mkdir -p test-results
-      dagger call get-test-results --source=. --output=./test-results
-
-      echo "✅ Reports generated:"
-      echo "  📄 HTML: test-report.html"
-      echo "  📁 JSON: test-results/"
-
-      # Open report in browser if available
-      if command -v xdg-open > /dev/null; then
-        xdg-open test-report.html
-      elif command -v open > /dev/null; then
-        open test-report.html
-      fi
-    '';
-
-    # Build extension for distribution
-    build-extension.exec = ''
-      echo "📦 Building extension for distribution..."
-
-      # Create dist directory
-      mkdir -p dist
-
-      # Copy extension files
-      cp manifest.json dist/
-      cp background.js dist/
-      cp tracker-block-extension.js dist/
-      cp tracking-blocker.js dist/
-      cp tracker-urls.txt dist/
-
-      # Create zip file
-      cd dist
-      zip -r ../tracker-blocker-extension.zip .
-      cd ..
-
-      echo "✅ Extension built: tracker-blocker-extension.zip"
-    '';
-
-    # Complete CI/CD pipeline (build + test + report)
-    ci.exec = ''
-      echo "🔄 Running complete CI/CD pipeline..."
-
-      # Initialize if needed
-      if [ ! -f "dagger/main.go" ]; then
-        init-dagger
-      fi
-
-      # Build extension
-      build-extension
-
-      # Run tests
-      test-extension
-
-      # Generate reports
-      generate-report
-
-      echo "🎉 CI/CD pipeline completed successfully!"
-    '';
-
-    # Development server with file watching
-    dev.exec = ''
-      echo "🔧 Starting development mode..."
-      echo "Extension files are being watched for changes..."
-
-      # Use nodemon to watch for changes and rebuild
-      npx nodemon --watch . --ext js,json,txt --ignore node_modules --ignore test-results --ignore dist --exec "echo '🔄 Files changed, rebuilding...' && build-extension"
-    '';
-
-    # Clean up generated files
-    clean.exec = ''
-      echo "🧹 Cleaning up generated files..."
-      rm -rf dist/
-      rm -rf test-results/
-      rm -f test-report.html
-      rm -f tracker-blocker-extension.zip
-      echo "✅ Cleanup completed!"
-    '';
-  };
-  processes = {
-    # Optional: Run a simple HTTP server for testing
-    http-server = {
-      exec = "npx http-server . -p 8080 -c-1";
-      process-compose = {
-        availability = {
-          restart = "on_failure";
-          max_restarts = 3;
-        };
-      };
-    };
   };
 
   enterShell = ''
@@ -205,11 +86,6 @@
     echo "Available commands:"
     echo "  🚀 init-dagger     - Initialize Dagger testing pipeline"
     echo "  🧪 test-extension  - Run Chrome extension tests"
-    echo "  📊 generate-report - Generate HTML/JSON test reports"
-    echo "  📦 build-extension - Build extension for distribution"
-    echo "  🔄 ci             - Run complete CI/CD pipeline"
-    echo "  🔧 dev            - Start development mode with file watching"
-    echo "  🧹 clean          - Clean up generated files"
     echo ""
     echo "Project structure:"
     echo "  📁 Extension files: manifest.json, *.js, tracker-urls.txt"
@@ -227,13 +103,13 @@
 
     # Show current project status
     echo "Current project status:"
-    if [ -f "manifest.json" ]; then
+    if [ -f "extension/manifest.json" ]; then
       echo "  ✅ Extension manifest found"
     else
       echo "  ❌ Extension manifest missing"
     fi
 
-    if [ -f "dagger/main.go" ]; then
+    if [ -f ".dagger/main.go" ]; then
       echo "  ✅ Dagger pipeline configured"
     else
       echo "  ⚠️  Dagger pipeline not initialized (run 'init-dagger')"
@@ -249,20 +125,20 @@
   '';
 
   # Git hooks for quality assurance
-  # git-hooks = {
-  #   hooks.test-extension = {
-  #     enable = true;
-  #     entry = "${pkgs.writeShellScript "test-extension" ''
-  #       if [ -f "dagger/main.go" ]; then
-  #         echo "Running extension tests before commit..."
-  #         dagger call -vvv test-extension --source=.
-  #       else
-  #         echo "Dagger not initialized, skipping tests"
-  #       fi
-  #     ''}";
-  #     files = "\\.(js|json|txt)$";
-  #   };
-  # };
+  git-hooks = {
+    hooks.test-extension = {
+      enable = true;
+      entry = "${pkgs.writeShellScript "test-extension" ''
+        if [ -f ".dagger/main.go" ]; then
+          echo "Running extension tests before commit..."
+          dagger call test-extension --src=.
+        else
+          echo "Dagger not initialized, skipping tests"
+        fi
+      ''}";
+      files = "\\.(js|json|txt)$";
+    };
+  };
 
   # https://devenv.sh/tasks/
   # tasks = {
